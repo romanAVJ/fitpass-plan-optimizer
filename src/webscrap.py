@@ -5,7 +5,7 @@ Created on Fri Aug 18 20:00:29 2023
 
 @author: ravj
 
-Script to webscrap fitpass studios
+Script to webscrap fitpass studios (WIP)
 """
 # %% libraries
 import pandas as pd
