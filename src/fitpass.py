@@ -7,6 +7,7 @@ Created on Sat Sep 9 17:03:21 2023
 
 Modules for fitpass optimization
 """
+# %% import
 import pandas as pd
 import numpy as np
 import pulp as plp
@@ -19,7 +20,7 @@ from shapely.ops import cascaded_union
 # =============================================================================
 # Functions
 # =============================================================================
-#### utils
+# %% functions
 # transform user location to epsg:6372
 def get_tuples_points(point):
     return np.asarray([(point['longitude'], point['latitude'])])
@@ -48,11 +49,11 @@ def distance_studio_loss(distance, sensitivity='low'):
     
     # sensitivity
     if sensitivity == 'low':
-        return exp_dist(distance, alpha=-5)
+        return exp_dist(distance, alpha=5)
     elif sensitivity == 'medium':
         return exp_dist(distance, alpha=0.1)
     elif sensitivity == 'high':
-        return exp_dist(distance, alpha=5)
+        return exp_dist(distance, alpha=-5)
     else:
         raise ValueError('sensitivity must be low, medium or high')
 
@@ -65,17 +66,15 @@ def get_studios(states=['MX09', 'MX15']):
     Function to get the studios from fitpass website
     """
     # read data #
-    df_fitpass_r = pd.read_parquet('data/scrapped_fitpass_cdmx.parquet')
+    df_fitpass_r = pd.read_parquet('../data/scrapped_fitpass_cdmx.parquet')
     gdf_fitpass = gpd.GeoDataFrame(
         df_fitpass_r, 
         geometry=gpd.points_from_xy(df_fitpass_r.longitude, df_fitpass_r.latitude),
         crs="EPSG:4326"
     )
-    gdf_states = gpd.read_file('data/mexico_states') # WIP: add this part to the webscrap + enrich process
+    gdf_states = gpd.read_file('../data/mexico_states') # WIP: add this part to the webscrap + enrich process
 
     # wrangle data #
-    # change crs
-    gdf_fitpass = gdf_fitpass.to_crs("EPSG:6372")
 
     # get activities in a list
     gdf_fitpass_mexico_long = (
@@ -100,13 +99,19 @@ def get_studios(states=['MX09', 'MX15']):
     polygon_mex = gdf_states[gdf_states['CODIGO'].isin(states)].unary_union
     gdf_fitpass = gdf_fitpass[gdf_fitpass.within(polygon_mex)]
     # no virtual classes
-    gdf_fitpass = gdf_fitpass[gdf_fitpass['virtual_class'] > 0]
+    gdf_fitpass = gdf_fitpass[gdf_fitpass['virtual_class'] <= 0]
     # no activities
     gdf_fitpass = gdf_fitpass.dropna(subset=['activity'])
 
     # generate random ranking
     rng = np.random.RandomState(8)
-    df_fitpass_r["ranking"] = 4*rng.beta(5, 2, size=10000) + 1
+    gdf_fitpass["ranking"] = 4*rng.beta(5, 2, size=gdf_fitpass.shape[0]) + 1
+
+    # change crs
+    gdf_fitpass = gdf_fitpass.to_crs("EPSG:6372")
+
+    # reset index
+    gdf_fitpass = gdf_fitpass.reset_index(drop=True)
 
     # return
     return gdf_fitpass
@@ -125,7 +130,7 @@ def get_payloads():
             "latitude": 19.388900864307445,
         },
         # user loss distance to studios
-        "distance_sensitivity": 'low', # low, medium, high
+        "distance_sensitivity": 'medium', # low, medium, high
         # user preferences
         "preferences": {
             "love_activities": ["barre", "yoga", "cycling", "pilates", "gym"],
@@ -138,26 +143,31 @@ def get_payloads():
     }
     return examples
 
-def distances_user_studios(gdf_studios, user_info, use_ranking=True):
+def distances_user_studios(gdf, user_info, use_ranking=True):
+    # copy
+    gdf = gdf.copy()
+
     #### distance to studios ####
     # get user location in meters
     user_location = transform_points(get_tuples_points(user_info['location']))
     # get distance to studios
-    gdf_studios['distance'] = gdf_studios.distance(Point(user_location[0])) / 1000 # in km's
+    gdf['distance'] = gdf.distance(Point(user_location[0])) / 1000 # in km's
     # filter by distance
-    gdf_studios = gdf_studios[gdf_studios['distance'] <= gdf_studios['distance'].quantile(0.9)] # less than 90% of the studios
-    gdf_studios['distance_norm'] = normalize(gdf_studios['distance'].copy())
-    # get loss
-    gdf_studios['distance_loss'] = distance_studio_loss(gdf_studios['distance_norm'])
+    gdf = gdf[gdf['distance'] <= gdf['distance'].quantile(0.9)] # less than 90% of the studios
+    # get distance loss
+    gdf['distance_loss'] = distance_studio_loss(
+        distance=normalize(gdf['distance'].copy()),
+        sensitivity=user_info['distance_sensitivity']
+        )
 
     #### user preferences ####
     # activity preference
-    gdf_studios['preference'] = np.select(
+    gdf['preference'] = np.select(
         [
-            gdf_studios['activity'].apply(
+            gdf['activity'].apply(
                 lambda x: any([i in user_info['preferences']['love_activities'] for i in x])
                 ),
-            gdf_studios['activity'].apply(
+            gdf['activity'].apply(
                 lambda x: any([i in user_info['preferences']['hate_activities'] for i in x])
                 )
         ],
@@ -169,18 +179,20 @@ def distances_user_studios(gdf_studios, user_info, use_ranking=True):
     )
     # pro preference
     # filter by pro if user is pro
-    gdf_studios = gdf_studios[gdf_studios['pro_status'] <= user_info['is_pro']]
-    gdf_studios['pro_preference'] = np.where(gdf_studios['pro_status'] > 0, 3, 1) # always prefer pro's
+    gdf = gdf[gdf['pro_status'] <= user_info['is_pro']]
+    gdf['pro_preference'] = np.where(gdf['pro_status'] > 0, 3, 1) # always prefer pro's
     # ranking
-    gdf_studios['ranking_preference'] = np.where(use_ranking, gdf_studios['ranking'], 1)
+    gdf['ranking_preference'] = np.where(use_ranking, gdf['ranking'], 1)
     # preference score
-    gdf_studios['preference_score'] = normalize(distance_preference(
-        activity=gdf_studios['preference'],
-        pro=gdf_studios['pro_preference'],
-        ranking=gdf_studios['ranking_preference']
+    gdf['preference_score'] = normalize(distance_preference(
+        activity=gdf['preference'],
+        pro=gdf['pro_preference'],
+        ranking=gdf['ranking_preference']
     ))
-
-    return gdf_studios
+    
+    # reset index
+    gdf = gdf.reset_index(drop=True)
+    return gdf
 
 #### optimization
 # gym class
@@ -195,8 +207,8 @@ class Gym:
         self.point = dict_gym['geometry']
         
         # values for the optimization
-        self.distance = dict_gym['distance_exp']
-        self.ranking = dict_gym['preference_distance']
+        self.distance = dict_gym['distance_loss']
+        self.ranking = dict_gym['preference_score']
         # values for constraints
         self.activities = dict_gym['activity']
 
@@ -204,7 +216,7 @@ class Gym:
         # lower case name
         # TODO: better representation
         tidy_name = self.name.lower()
-        s = f"id: {self.id} - {tidy_name}: times {self.pulp_var.value()}"
+        s = f"{tidy_name}: {int(self.pulp_var.value())} times. (id: {self.id})"
         return s
     
     def compare_activity(self, activity):
@@ -251,7 +263,7 @@ def create_variables(df, user_info, list_activities):
             variable=plp.LpVariable(
                 name=f"gym{gym_id}",
                 lowBound=0,
-                upBound=np.min(user_info["max_allowed_classes_per_class"], 4),
+                upBound=np.min([user_info["max_allowed_classes_per_class"], 4]),
                 cat='Integer'
             ))
         
@@ -329,7 +341,7 @@ def create_problem(df, user_info, list_activities, dict_weights):
 
 def solve_problem(prob, dict_variables):
     # solve the problem
-    prob.solve(verbose=False)
+    prob.solve(plp.PULP_CBC_CMD(msg=0))
 
     # look if the problem was solved
     if plp.LpStatus[prob.status] == 'Optimal':
@@ -348,16 +360,69 @@ def solve_problem(prob, dict_variables):
         activities_with_classes = None
     return {'solution': solution, 'activities': activities_with_classes}
 
+def generate_solution(df, solutions):
+    # get gym id's
+    gym_ids = [getattr(gym, "id") for gym in solutions]
+    gym_times = [int(gym.get_variable().value()) for gym in solutions]
+
+    df_gyms = pd.DataFrame({
+        'gym_id': gym_ids,
+        'gym_times': gym_times
+    })
+
+    # filter df
+    df_solution = (
+        df.copy()
+        [['gym_id', 'gym_name', 'activity', 'distance', 'preference_score', 
+          'geometry', 'pro_status']]
+        .merge(df_gyms, on='gym_id', how='inner')
+        .sort_values(by='gym_name', ascending=True, ignore_index=True)
+        .drop(columns=['gym_id'])
+        [['gym_name', 'gym_times', 'activity', 'distance', 'preference_score', 
+          'pro_status', 'geometry']]
+    )
+    return df_solution
+
+
 # the app.py function (WIP)
 def fitpass_optimization(user_info, dict_weights):
+    # load data
+    df_studios = get_studios()
 
+    # distances
+    df_distances = distances_user_studios(df_studios, user_info, use_ranking=False)
+
+    # optimization #
+    # activities
+    list_activities = df_distances['activity'].explode().unique().tolist()
+    list_activities.sort()
 
     # create problem
-    dict_problem = create_problem(df, user_info, list_activities, dict_weights)
+    dict_problem = create_problem(
+        df_distances, user_info, list_activities, dict_weights=WEIGHTS
+        )
+
     # solve problem
     dict_solution = solve_problem(dict_problem['problem'], dict_problem['variables'])
-    return dict_solution
+
+    # get solutions #
+    df_solution = generate_solution(df_distances, dict_solution['solution'])
+    return df_solution
 
 # =============================================================================
 # Main
 # =============================================================================
+# PARAMETERS
+WEIGHTS = {
+    'distance': 0.6,
+    'preference': 0.3,
+    'activity': 0.075,
+    'class': 0.025
+}
+
+payload = get_payloads()['roman']
+
+df_solutions = fitpass_optimization(payload, WEIGHTS)
+
+
+
