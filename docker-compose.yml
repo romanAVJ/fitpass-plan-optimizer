@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  fitpass-app:
+    build:
+      context: .
+    ports:
+      - "5432:5432"
+      - "8050:8050"
+    entrypoint: ["bash"]

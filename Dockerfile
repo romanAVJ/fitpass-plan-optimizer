@@ -32,5 +32,5 @@ COPY app /app
 # Expose the port for the Dash application
 EXPOSE 8050
 
-# Command to run the Python script to initialize the database and then run the Dash application
-CMD ["sh", "-c", "python3 app/init_db.py && python3 app/app.py"]
+# Command to run
+CMD ["bash"]
