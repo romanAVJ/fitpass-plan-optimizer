@@ -75,7 +75,6 @@ def get_studios(states=['MX09', 'MX15']):
     gdf_states = gpd.read_file('../data/mexico_states') # WIP: add this part to the webscrap + enrich process
 
     # wrangle data #
-
     # get activities in a list
     gdf_fitpass_mexico_long = (
         gdf_fitpass.copy()
@@ -383,8 +382,7 @@ def generate_solution(df, solutions):
     )
     return df_solution
 
-
-# the app.py function (WIP)
+# the app.py function
 def fitpass_optimization(user_info, dict_weights):
     # load data
     df_studios = get_studios()
@@ -412,17 +410,20 @@ def fitpass_optimization(user_info, dict_weights):
 # =============================================================================
 # Main
 # =============================================================================
-# PARAMETERS
-WEIGHTS = {
-    'distance': 0.6,
-    'preference': 0.3,
-    'activity': 0.075,
-    'class': 0.025
-}
+# Check if the script is run directly
+if __name__ == "__main__":
+    # Additional code to run when the script is executed directly
+    # This block won't be executed when the script is imported as a module
+    print("Running fitpass.py directly")
 
-payload = get_payloads()['roman']
+    # PARAMETERS
+    WEIGHTS = {
+        'distance': 0.6,
+        'preference': 0.3,
+        'activity': 0.075,
+        'class': 0.025
+    }
 
-df_solutions = fitpass_optimization(payload, WEIGHTS)
+    payload = get_payloads()['roman']
 
-
-
+    df_solutions = fitpass_optimization(payload, WEIGHTS)
