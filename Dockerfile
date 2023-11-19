@@ -28,6 +28,9 @@ RUN pip install --no-cache-dir -r /requirements.txt
 
 # Copy the files from app directory to the root directory
 COPY app /app
+COPY data/tidy_fitpass_cdmx.parquet /app/data
+
+# Copy data from data directory to a data directory in the root directory
 
 # Expose the port for the Dash application
 EXPOSE 8050

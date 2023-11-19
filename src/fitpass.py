@@ -66,13 +66,14 @@ def get_studios(states=['MX09', 'MX15']):
     Function to get the studios from fitpass website
     """
     # read data #
-    df_fitpass_r = pd.read_parquet('../data/scrapped_fitpass_cdmx.parquet')
+    df_fitpass_r = pd.read_parquet('../data/tidy_fitpass_cdmx.parquet')
     gdf_fitpass = gpd.GeoDataFrame(
         df_fitpass_r, 
         geometry=gpd.points_from_xy(df_fitpass_r.longitude, df_fitpass_r.latitude),
         crs="EPSG:4326"
     )
-    gdf_states = gpd.read_file('../data/mexico_states') # WIP: add this part to the webscrap + enrich process
+    # change crs to epsg:6372
+    gdf_fitpass = gdf_fitpass.to_crs("EPSG:6372")
 
     # wrangle data #
     # get activities in a list
@@ -94,9 +95,6 @@ def get_studios(states=['MX09', 'MX15']):
     gdf_fitpass = gdf_fitpass.merge(gdf_fitpass_mexico_long, on='gym_id', how='left')
 
     # hard filters #
-    # filter by state
-    polygon_mex = gdf_states[gdf_states['CODIGO'].isin(states)].unary_union
-    gdf_fitpass = gdf_fitpass[gdf_fitpass.within(polygon_mex)]
     # no virtual classes
     gdf_fitpass = gdf_fitpass[gdf_fitpass['virtual_class'] <= 0]
     # no activities
@@ -106,8 +104,6 @@ def get_studios(states=['MX09', 'MX15']):
     rng = np.random.RandomState(8)
     gdf_fitpass["ranking"] = 4*rng.beta(5, 2, size=gdf_fitpass.shape[0]) + 1
 
-    # change crs
-    gdf_fitpass = gdf_fitpass.to_crs("EPSG:6372")
 
     # reset index
     gdf_fitpass = gdf_fitpass.reset_index(drop=True)
@@ -427,3 +423,4 @@ if __name__ == "__main__":
     payload = get_payloads()['roman']
 
     df_solutions = fitpass_optimization(payload, WEIGHTS)
+    print(df_solutions)

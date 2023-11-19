@@ -1,13 +1,17 @@
 import psycopg2
 from psycopg2 import sql
 import pandas as pd
+import time
+
+# Wait for PostgreSQL to be ready
+time.sleep(10)
 
 # Connect to the PostgreSQL database
 conn = psycopg2.connect(
     dbname="fitpass",
     user="postgres",
     password="postgres",
-    host="localhost",
+    host="fitpass-app",
     port=5432
 )
 
@@ -51,7 +55,7 @@ cur.execute(table_creation_query)
 conn.commit()
 
 # Read the data from the Parquet file
-parquet_file_path = '/data/scrapped_fitpass_cdmx.parquet'
+parquet_file_path = 'data/tidy_fitpass_cdmx.parquet'
 df = pd.read_parquet(parquet_file_path)
 
 # Insert data into the table
