@@ -10,13 +10,35 @@ Navigate to the project directory and run the following command:
 docker-compose build
 ```
 
-2. Run Docker container
+2. Run Docker container interactively
 
 Command map the container's PostgreSQL port (5432) to local machine's port 5432 and the Dash app port (8050) to local machine's port 8050.
 
 ```bash
-docker-compose run fitpass-app
+# Start the Docker container in interactive mode
+docker-compose up -d
+
+# Find the name or ID of your running PostgreSQL container
+CONTAINER_ID=$(docker-compose ps -q fitpass-app)
+
+# Connect to the PostgreSQL container interactively
+docker exec -it $CONTAINER_ID bash
 ```
+
+3. Execute programs
+
+Execute any program you want. For example, to run the init_db program, run the following command:
+
+```bash
+python init_db.py
+```
+
+4. Stop & remove the container
+
+```bash
+docker-compose down
+```
+
 
 # Run the application (WIP)
 1. Build Docker image
