@@ -11,12 +11,12 @@ WORKDIR /
 
 # Install Python 3.9 and pip
 RUN apt-get update && \
-    apt-get install -y python3.9 python3.9-venv python3.9-distutils \
+    apt-get install -y python3.9 python3-venv python3-distutils \
                        libgdal-dev libproj-dev proj-data proj-bin \
-                       libgeos-dev libpq-dev
+                       libgeos-dev
 
 # Create a virtual environment
-RUN python3.9 -m venv /venv
+RUN python3 -m venv /venv
 ENV PATH="/venv/bin:$PATH"
 
 # Copy the requirements.txt file and install Python dependencies

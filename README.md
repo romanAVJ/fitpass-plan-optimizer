@@ -19,7 +19,7 @@ Command map the container's PostgreSQL port (5432) to local machine's port 5432 
 docker-compose up -d
 
 # Find the name or ID of your running PostgreSQL container
-CONTAINER_ID=$(docker-compose ps -q fitpass-app)
+CONTAINER_ID=$(docker-compose ps -q db)
 
 # Connect to the PostgreSQL container interactively
 docker exec -it $CONTAINER_ID bash
