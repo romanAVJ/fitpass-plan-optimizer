@@ -230,8 +230,8 @@ def filter_data(df: pd.DataFrame, states='MX09') -> pd.DataFrame:
     polygon_mex = gdf_states[gdf_states['CODIGO'].isin(states)].unary_union
     gdf = gdf[gdf.within(polygon_mex)]
 
-    # drop geometry
-    gdf = gdf.drop(columns=['geometry'])
+    # drop geometry & notes & address
+    gdf = gdf.drop(columns=['geometry', 'notes', 'address'])
 
 
     return pd.DataFrame(gdf.reset_index(drop=True))

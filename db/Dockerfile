@@ -6,5 +6,5 @@ ENV POSTGRES_DB fitpass
 ENV POSTGRES_USER postgres
 ENV POSTGRES_PASSWORD skalas-puts-me-an-aplus-in-this-class
 
-# Create a table in the database
+# Copy the SQL script to the initdb directory
 COPY create_table.sql /docker-entrypoint-initdb.d/

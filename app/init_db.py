@@ -4,13 +4,12 @@ import pandas as pd
 import os
 
 # Connect to the PostgreSQL database
-print("hola")
 print('Connecting to the PostgreSQL database...')
 conn = psycopg2.connect(
     dbname=os.environ['POSTGRES_DB'],
     user=os.environ['POSTGRES_USER'],
     password=os.environ['POSTGRES_PASSWORD'],
-    host="0.0.0.0",
+    host="db", # docker-compose service name
     port="5432"
 )
 # Open a cursor to perform database operations

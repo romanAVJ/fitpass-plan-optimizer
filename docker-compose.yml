@@ -7,13 +7,12 @@ services:
       - 5432:5432
     restart: always
     volumes:
-      - ./postgres:/docker-entrypoint-initdb.d
+      - ./postgres-data:/var/lib/postgresql/data
 
   app:
     build: ./app
     depends_on:
       - db
-    restart: always
     ports:
       - 8000:8000
     volumes:

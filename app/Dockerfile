@@ -18,6 +18,3 @@ COPY . /app
 
 # Set the working directory
 WORKDIR /app
-
-# Run the app when the container launches in debug mode
-CMD ["bash"]
