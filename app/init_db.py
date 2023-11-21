@@ -13,7 +13,7 @@ def wait_for_db():
         try:
             print(f"Trying to connect to the PostgreSQL database... ({retries}/{max_retries})")
             conn = psycopg2.connect(
-                host=os.environ.get('DB_HOST', 'localhost'),
+                host=os.environ.get('POSTGRES_HOST', 'localhost'),
                 user=os.environ.get('POSTGRES_USER', 'postgres'),
                 password=os.environ.get('POSTGRES_PASSWORD', ''),
                 database=os.environ.get('POSTGRES_DB', 'fitpass')

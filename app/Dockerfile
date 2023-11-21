@@ -28,12 +28,8 @@ COPY . /app
 # # Set the working directory
 WORKDIR /app
 
-# #### INIT DB ####
-# Run init_db.py to create the database and tables
-RUN python init_db.py
-
 #### RUN FLASK PYTHON SERVER ####
 ENV FLASK_APP=app.py
 ENV FLASK_ENV=development
 
-CMD ["gunicorn", "-b", "0.0.0.0:8000", "--access-logfile", "-", "--error-logfile", "-", "--timeout", "120", "app:app"]
+CMD ["python", "init_db.py"]

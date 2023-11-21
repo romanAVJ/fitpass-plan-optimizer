@@ -99,4 +99,5 @@ if __name__ == '__main__':
     if os.environ.get('FLASK_ENV') != 'development':
         app.run(host='0.0.0.0') # production
     else:
+        print("Running in development mode...")
         app.run(host='0.0.0.0', debug=True) # development / debugging
