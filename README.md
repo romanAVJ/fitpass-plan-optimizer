@@ -40,20 +40,39 @@ docker volume rm $(docker volume ls -q)
 ```
 
 # Run the application in production (WIP)
-1. Build Docker image
+1. Compose the application
 
 Navigate to the project directory and run the following command:
-
 ```bash
-docker build -t fitpass-app .
+docker-compose up --build
 ```
 
-2. Run Docker container
+Now you can access the application at http://localhost:8000
 
-Command map the container's PostgreSQL port (5432) to local machine's port 5432 and the Dash app port (8050) to local machine's port 8050.
+2. Test endpoints
 
+- `info` endpoint
 ```bash
-docker run -p 5432:5432 -p 8050:8050 -it fitpass-app bash
+curl -X GET http://localhost:8000/info
 ```
 
-Now you are inside the container.
+- `predict` endpoint
+```bash
+curl -X POST -H "Content-Type: application/json" -d '{
+    "data": {
+        "name": "roman",
+        "location": {
+            "latitude": 19.388900864307445,
+            "longitude": -99.18265186842596
+        },
+        "distance_sensitivity": "medium",
+        "preferences": {
+            "love_activities": ["barre", "yoga", "cycling", "pilates", "gym"],
+            "hate_activities": ["crossfit", "functional"]
+        },
+        "is_pro": 1,
+        "max_allowed_classes_per_class": 4,
+        "num_classes_per_month": 23
+    }
+}' http://localhost:8000/predict
+```

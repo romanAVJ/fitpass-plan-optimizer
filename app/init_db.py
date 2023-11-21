@@ -2,16 +2,39 @@ import psycopg2
 from psycopg2 import sql
 import pandas as pd
 import os
+import time
+
+# Wait for the PostgreSQL database to be ready
+def wait_for_db():
+    max_retries = 10
+    retries = 0
+
+    while retries < max_retries:
+        try:
+            print(f"Trying to connect to the PostgreSQL database... ({retries}/{max_retries})")
+            conn = psycopg2.connect(
+                host=os.environ.get('DB_HOST', 'localhost'),
+                user=os.environ.get('POSTGRES_USER', 'postgres'),
+                password=os.environ.get('POSTGRES_PASSWORD', ''),
+                database=os.environ.get('POSTGRES_DB', 'fitpass')
+            )
+            print("Connected to the PostgreSQL database.")
+            return conn
+        except psycopg2.OperationalError as e:
+            print(f"Error: {e}")
+            print(f"Waiting 10 seconds for PostgreSQL to be ready... ({retries}/{max_retries})")
+            retries += 1
+            time.sleep(10)
+
+    print("Max retries reached. Unable to connect to the PostgreSQL database.")
+    return None
 
 # Connect to the PostgreSQL database
 print('Connecting to the PostgreSQL database...')
-conn = psycopg2.connect(
-    dbname=os.environ['POSTGRES_DB'],
-    user=os.environ['POSTGRES_USER'],
-    password=os.environ['POSTGRES_PASSWORD'],
-    host="db", # docker-compose service name
-    port="5432"
-)
+time.sleep(10) # wait for postgres to be ready
+print('Waiting 10 seconds for postgres to be ready...')
+
+conn = wait_for_db()
 # Open a cursor to perform database operations
 print('Opening a cursor to perform database operations...')
 cur = conn.cursor()

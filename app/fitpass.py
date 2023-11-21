@@ -16,10 +16,6 @@ import geopandas as gpd
 from shapely.geometry import Point
 from shapely.ops import cascaded_union
 
-
-# =============================================================================
-# Functions
-# =============================================================================
 # %% functions
 # transform user location to epsg:6372
 def get_tuples_points(point):
@@ -66,7 +62,7 @@ def get_studios(states=['MX09', 'MX15']):
     Function to get the studios from fitpass website
     """
     # read data #
-    df_fitpass_r = pd.read_parquet('data/tidy_fitpass_cdmx.parquet')
+    df_fitpass_r = pd.read_parquet('tidy_fitpass_cdmx.parquet')
     gdf_fitpass = gpd.GeoDataFrame(
         df_fitpass_r, 
         geometry=gpd.points_from_xy(df_fitpass_r.longitude, df_fitpass_r.latitude),
@@ -401,7 +397,7 @@ def fitpass_optimization(user_info, dict_weights):
 
     # get solutions #
     df_solution = generate_solution(df_distances, dict_solution['solution'])
-    return df_solution
+    return df_solution.to_dict(orient='records')
 
 # =============================================================================
 # Main
