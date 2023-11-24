@@ -29,7 +29,11 @@ COPY . /app
 WORKDIR /app
 
 #### RUN FLASK PYTHON SERVER ####
-ENV FLASK_APP=app.py
-ENV FLASK_ENV=development
+ENV FLASK_APP app.py
+ENV FLASK_ENV development
 
-CMD ["python", "init_db.py"]
+# Expose the port 8080
+EXPOSE 8080
+
+# Run the flask server
+CMD ["flask", "run", "--host=0.0.0.0", "--port=8080"]

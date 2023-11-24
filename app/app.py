@@ -11,8 +11,15 @@ Flask app for post request for fitpass pulp optimization
 from flask import Flask, request, jsonify
 import json
 import os
+import logging
 
 from fitpass import fitpass_optimization
+
+# %% debugging
+FLASK_ENV = os.environ.get('FLASK_ENV')
+
+def log_debugg(text):
+    logging.debug(text)
 
 # %% parameters
 MODEL_NAME = 'fitpass class optimization'
@@ -27,10 +34,13 @@ WEIGHTS = {
 # %% functions
 def validate_data(request):
     # validate headers
+    log_debugg("reading headers")
+    log_debugg(request.headers)
     if 'Content-Type' not in request.headers:
         raise Exception('Content-Type not in headers')
     
     # validate content type
+    log_debugg("validating content type")
     if request.headers['Content-Type'] != 'application/json':
         raise Exception('Content-Type not application/json')
     # validate parameters
@@ -75,29 +85,38 @@ def info():
 # predict endpoint
 @app.route('/predict', methods=['POST'])
 def predict():
+    log_debugg("predict endpoint called")
     # get request
+    log_debugg("getting request")
     request_json = request.get_json()
     if request_json is None:
         return jsonify({'error': 'request is None'})
 
     # parse request
     try:
+        log_debugg("parsing request")
         request_json = json.loads(request_json)
         # get data
+        log_debugg("getting data")
         data = request_json['data']
         # validate data
+        log_debugg("validating data")
         validate_data(request_json)
         # get output
+        log_debugg("getting output")
         output = fitpass_optimization(data, WEIGHTS)
         # return output
+        log_debugg("returning output")
         return jsonify(output), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 400
 
 # %% main
 if __name__ == '__main__':
-    if os.environ.get('FLASK_ENV') != 'development':
-        app.run(host='0.0.0.0') # production
-    else:
-        print("Running in development mode...")
-        app.run(host='0.0.0.0', debug=True) # development / debugging
+    app.run(host='0.0.0.0', debug=True, port=8080) # development / debugging
+    # if os.environ.get('FLASK_ENV') != 'development':
+    #     print("Running in production mode...")
+    #     app.run(host='0.0.0.0', port=8080) # production
+    # else:
+    #     print("Running in development mode...")
+    #     app.run(host='0.0.0.0', debug=True, port=8080) # development / debugging

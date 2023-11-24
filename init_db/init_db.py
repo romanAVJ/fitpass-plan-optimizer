@@ -6,7 +6,7 @@ import time
 
 # Wait for the PostgreSQL database to be ready
 def wait_for_db():
-    max_retries = 10
+    max_retries = 3
     retries = 0
 
     while retries < max_retries:
@@ -31,7 +31,7 @@ def wait_for_db():
 
 # Connect to the PostgreSQL database
 print('Connecting to the PostgreSQL database...')
-time.sleep(10) # wait for postgres to be ready
+time.sleep(5) # wait for postgres to be ready
 print('Waiting 10 seconds for postgres to be ready...')
 
 conn = wait_for_db()

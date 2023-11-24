@@ -393,7 +393,7 @@ def fitpass_optimization(user_info, dict_weights):
 
     # create problem
     dict_problem = create_problem(
-        df_distances, user_info, list_activities, dict_weights=WEIGHTS
+        df_distances, user_info, list_activities, dict_weights=dict_weights
         )
 
     # solve problem
