@@ -377,14 +377,9 @@ def generate_solution(df, solutions):
 
     # filter df
     df_solution = (
-        df.copy()
-        [['gym_id', 'gym_name', 'activity', 'distance', 'preference_score', 
-          'geometry', 'pro_status']]
+        df[['gym_id']].copy()
         .merge(df_gyms, on='gym_id', how='inner')
-        .sort_values(by='gym_name', ascending=True, ignore_index=True)
-        .drop(columns=['gym_id'])
-        [['gym_name', 'gym_times', 'activity', 'distance', 'preference_score', 
-          'pro_status', 'geometry']]
+        .sort_values(by='gym_times', ascending=True, ignore_index=True)
     )
     return df_solution
 
