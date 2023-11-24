@@ -18,6 +18,13 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+# Install CBC solver for PuLP
+RUN apt-get update \
+    && apt-get install -y coinor-cbc \
+                          libc6 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
 # Copy requirements.txt file and install Python dependencies
 COPY requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt

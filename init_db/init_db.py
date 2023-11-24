@@ -31,8 +31,6 @@ def wait_for_db():
 
 # Connect to the PostgreSQL database
 print('Connecting to the PostgreSQL database...')
-time.sleep(5) # wait for postgres to be ready
-print('Waiting 10 seconds for postgres to be ready...')
 
 conn = wait_for_db()
 # Open a cursor to perform database operations

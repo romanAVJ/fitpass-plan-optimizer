@@ -22,6 +22,7 @@ services:
 
   app:
     build: ./app
+    platform: linux/x86_64
     depends_on:
       db:
         condition: service_healthy
