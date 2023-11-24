@@ -12,9 +12,20 @@ import pandas as pd
 import numpy as np
 import pulp as plp
 import geopandas as gpd
+import os
 
 from shapely.geometry import Point
 from shapely.ops import cascaded_union
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+
+# %% debugging
+FLASK_ENV = os.environ.get('FLASK_ENV')
+
+def log_debugg(text):
+    if FLASK_ENV == 'development':
+        logging.debug(text)
 
 # %% functions
 # transform user location to epsg:6372
@@ -332,9 +343,12 @@ def create_problem(df, user_info, list_activities, dict_weights):
 
 def solve_problem(prob, dict_variables):
     # solve the problem
-    prob.solve(plp.PULP_CBC_CMD(msg=0))
+    log_debugg("solving problem with CBC")
+    # solve with GLPK
+    prob.solve(plp.PULP_CBC_CMD(msg=True))
 
-    # look if the problem was solved
+    # look if the problem was solved}
+    log_debugg(f"status: {plp.LpStatus[prob.status]}")
     if plp.LpStatus[prob.status] == 'Optimal':
         # get the solution
         solution = [gym for gym in dict_variables['gym'].values() if gym > 0]
@@ -363,23 +377,20 @@ def generate_solution(df, solutions):
 
     # filter df
     df_solution = (
-        df.copy()
-        [['gym_id', 'gym_name', 'activity', 'distance', 'preference_score', 
-          'geometry', 'pro_status']]
+        df[['gym_id']].copy()
         .merge(df_gyms, on='gym_id', how='inner')
-        .sort_values(by='gym_name', ascending=True, ignore_index=True)
-        .drop(columns=['gym_id'])
-        [['gym_name', 'gym_times', 'activity', 'distance', 'preference_score', 
-          'pro_status', 'geometry']]
+        .sort_values(by='gym_times', ascending=True, ignore_index=True)
     )
     return df_solution
 
 # the app.py function
 def fitpass_optimization(user_info, dict_weights):
     # load data
+    log_debugg("loading data")
     df_studios = get_studios()
 
     # distances
+    log_debugg("getting distances")
     df_distances = distances_user_studios(df_studios, user_info, use_ranking=False)
 
     # optimization #
@@ -388,14 +399,17 @@ def fitpass_optimization(user_info, dict_weights):
     list_activities.sort()
 
     # create problem
+    log_debugg("creating problem")
     dict_problem = create_problem(
-        df_distances, user_info, list_activities, dict_weights=WEIGHTS
+        df_distances, user_info, list_activities, dict_weights=dict_weights
         )
 
     # solve problem
+    log_debugg("solving problem")
     dict_solution = solve_problem(dict_problem['problem'], dict_problem['variables'])
 
     # get solutions #
+    log_debugg("getting solutions")
     df_solution = generate_solution(df_distances, dict_solution['solution'])
     return df_solution.to_dict(orient='records')
 
@@ -419,4 +433,4 @@ if __name__ == "__main__":
     payload = get_payloads()['roman']
 
     df_solutions = fitpass_optimization(payload, WEIGHTS)
-    print(df_solutions)
+    # print(df_solutions)

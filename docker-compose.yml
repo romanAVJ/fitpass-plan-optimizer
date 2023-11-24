@@ -13,13 +13,22 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-
-  app:
-    build: ./app
+  
+  init_db:
+    build: ./init_db
     depends_on:
       db:
         condition: service_healthy
+
+  app:
+    build: ./app
+    platform: linux/x86_64
+    depends_on:
+      db:
+        condition: service_healthy
+      init_db:
+        condition: service_completed_successfully
     ports:
-      - 8000:8000
+      - 8080:8080
     volumes:
       - ./app:/app

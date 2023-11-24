@@ -16,7 +16,7 @@ docker-compose up -d --build
 Execute any program you want. For example, to run the init_db program, run the following command:
 
 ```bash
-docker-compose run --rm -p 8000:8000 app bash
+docker-compose run --rm -p 8080:8080 app bash
 ```
 
 3. Execute programs
@@ -53,7 +53,7 @@ Now you can access the application at http://localhost:8000
 
 - `info` endpoint
 ```bash
-curl -X GET http://localhost:8000/info
+curl -X GET http://localhost:8080/info
 ```
 
 - `predict` endpoint
@@ -74,5 +74,5 @@ curl -X POST -H "Content-Type: application/json" -d '{
         "max_allowed_classes_per_class": 4,
         "num_classes_per_month": 23
     }
-}' http://localhost:8000/predict
+}' http://localhost:8080/predict
 ```
