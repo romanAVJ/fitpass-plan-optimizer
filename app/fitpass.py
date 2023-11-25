@@ -17,7 +17,10 @@ import os
 from shapely.geometry import Point
 from shapely.ops import cascaded_union
 import logging
+import psycopg2
+from sqlalchemy import create_engine
 
+import time
 logging.basicConfig(level=logging.DEBUG)
 
 # %% debugging
@@ -28,7 +31,32 @@ def log_debugg(text):
         logging.debug(text)
 
 # %% functions
-# transform user location to epsg:6372
+#### utils
+def get_db_conn():
+    max_retries = 3
+    retries = 0
+
+    while retries < max_retries:
+        try:
+            log_debugg(f"Trying to connect to the PostgreSQL database... ({retries}/{max_retries})")
+            host = os.environ.get('POSTGRES_HOST', 'localhost')
+            user = os.environ.get('POSTGRES_USER', 'postgres')
+            password = os.environ.get('POSTGRES_PASSWORD', '')
+            database = os.environ.get('POSTGRES_DB', 'fitpass')
+            conn = create_engine(f'postgresql://{user}:{password}@{host}/{database}')
+            log_debugg("Connected to the PostgreSQL database.")
+            return conn
+        except psycopg2.OperationalError as e:
+            log_debugg(f"Error: {e}")
+            log_debugg(f"Waiting 10 seconds for PostgreSQL to be ready... ({retries}/{max_retries})")
+            retries += 1
+            time.sleep(10)
+
+    log_debugg("Max retries reached. Unable to connect to the PostgreSQL database.")
+    return None
+
+
+#### distances
 def get_tuples_points(point):
     return np.asarray([(point['longitude'], point['latitude'])])
 
@@ -68,12 +96,18 @@ def distance_preference(activity, pro, ranking):
     return activity * pro * ranking
 
 ##### distances
-def get_studios(states=['MX09', 'MX15']):
+def get_studios():
     """
     Function to get the studios from fitpass website
     """
     # read data #
-    df_fitpass_r = pd.read_parquet('tidy_fitpass_cdmx.parquet')
+    log_debugg("reading data")
+    conn = get_db_conn()
+    query = "select * from cdmx_studios"
+    df_fitpass_r = pd.read_sql_query(query, conn)
+    df_fitpass_r = df_fitpass_r.drop_duplicates(subset=['gym_id']) # drop duplicates
+    conn.dispose() # close connection
+
     gdf_fitpass = gpd.GeoDataFrame(
         df_fitpass_r, 
         geometry=gpd.points_from_xy(df_fitpass_r.longitude, df_fitpass_r.latitude),
