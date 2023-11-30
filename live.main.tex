@@ -1,0 +1,48 @@
+undefined
+\begin{document}
+\begin{titlepage}
+\include{Portada}
+\end{titlepage}
+
+\section{Introducción}
+
+En la práctica de la ciencia de datos, una tarea común es encontrar la decisión óptima para un conjunto de múltiples elecciones con restricciones. Por ejemplo, \textit{en portfolio managment} se busca encontrar la \textit{mejor} combinación de acciones para invertir sujeto al presupuesto de un fondo de inversiones. Para este ejemplo, se desea encontrar qué activos $i$ comprar y cuánto comprar $x_i$ de cada uno, de tal manera que se maximice un función objetivo $f(\underline{x})$ sujeta a un presupuesto $M$ y a un conjunto de restricciones $A$. Para este ejemplo, es posible resolverlo con varios métodos de optimización que se han visitado en clase: optimización por gradiente descendiente, métodos quasi-newton, etc. Sin embargo, que pasaría si las soluciones de las variables $x_i$ fueran enteras? De igual forma, ¿qué pasaría si tuvieramos más de una función objetivo $f_{i}(\underline{x})$? Este problema se conoce como \textit{Multiobjective Mix Integer Programming} (MOILP) y es un problema NP-Hard. El presente trabajo se enfoca en explicar qué es MOILP, cómo se resuelve y una aplicación real para un caso de negocio de una empresa de fitness.
+
+\section{Multiobjective Mix Integer Programming}
+
+(Aquí va la explicación de MOILP):
+\begin{itemize}
+    \item Definición Formal
+    \item Distintos tipos de MOILP: pareto, soluciones con peso
+    \item Solución Técnica
+    \item Solvers disponibles (Gurobi, COIN, etc)
+\end{itemize}
+
+\section{Ejemplo: Fitpass}
+Fitpass es una empresa Méxicana que ofrece acceso a más de 1,500 estudios de fitness en todo el país, de los cuales ofrece 12 actividades $A$. Estas actividades $A_{j} \in A$ varían desde barre hasta yoga. La empresa ofrece dos planes de membresía que permiten a los usuarios asistir a un número limitado de clases $K$ por estudio $i$ al mes, lo único que varía entre uno y otro es acceso a estudios "pro". 
+
+
+El objetivo de la empresa es maximizar el número de visitas a los estudios de fitness, sin embargo, existen distintas restricciones que limitan el número de visitas. Por ejemplo, un usuario no puede visitar más de un estudio por día, no puede visitar el mismo estudio más de una vez al mes, etc. El problema de optimización que se desea resolver es el siguiente:
+
+\section{Anexos}
+
+\begin{equation*}
+\begin{aligned}
+\min_{x,y} \quad & (\omega_1) x^Td - 
+(\omega_2) x^Tpr - (\omega_3) \begin{pmatrix} 1 \\ \vdots \\ 1 \end{pmatrix}^T y\\
+\textrm{s.t.} \quad & 
+x_i \leq K\\
+  & \sum_{i = 1}^{n}{x_i} = M   \\
+  & y_i \leq \sum_{j \in A_i} x_j\\
+  & x, y \in \mathbf{Z}^n 
+\end{aligned}
+\end{equation*}
+Nota : $(\omega_1)+(\omega_2)+(\omega_3)= 1$\\
+n= número de estudios
+
+
+
+\bibliography{BMBibTeX}
+\bibliographystyle{ieeetr}
+\end{document}
+undefined
