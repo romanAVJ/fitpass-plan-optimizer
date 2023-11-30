@@ -59,20 +59,18 @@ curl -X GET http://localhost:8080/info
 - `predict` endpoint
 ```bash
 curl -X POST -H "Content-Type: application/json" -d '{
-    "data": {
-        "name": "roman",
-        "location": {
-            "latitude": 19.388900864307445,
-            "longitude": -99.18265186842596
-        },
-        "distance_sensitivity": "medium",
-        "preferences": {
-            "love_activities": ["barre", "yoga", "cycling", "pilates", "gym"],
-            "hate_activities": ["crossfit", "functional"]
-        },
-        "is_pro": 1,
-        "max_allowed_classes_per_class": 4,
-        "num_classes_per_month": 23
-    }
+    "name": "roman",
+    "location": {
+        "latitude": 19.388900864307445,
+        "longitude": -99.18265186842596
+    },
+    "distance_sensitivity": "medium",
+    "preferences": {
+        "love_activities": ["barre", "yoga", "cycling", "pilates", "gym"],
+        "hate_activities": ["crossfit", "functional"]
+    },
+    "is_pro": 1,
+    "max_allowed_classes_per_class": 4,
+    "num_classes_per_month": 23
 }' http://localhost:8080/predict
 ```

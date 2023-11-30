@@ -33,12 +33,12 @@ services:
     volumes:
       - ./app:/app
 
-  # dashboard:
-  #   build: ./dashboard
-  #   depends_on:
-  #     app:
-  #       condition: service_healthy
-  #   ports:
-  #     - 3000:3000
-  #   volumes:
-  #     - ./dashboard:/dashboard
+  dashboard:
+    build: ./dashboard
+    depends_on:
+      app:
+        condition: service_healthy
+    ports:
+      - 3000:3000
+    volumes:
+      - ./dashboard:/dashboard
