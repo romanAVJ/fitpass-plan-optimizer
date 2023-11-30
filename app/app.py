@@ -101,6 +101,40 @@ def predict():
     except Exception as e:
         return jsonify({'error': str(e)}), 400
 
+# @app.route('/', methods=['GET', 'POST'])
+# def index():
+#     if request.method == 'POST':
+#         # Aquí capturas los datos del formulario inicial, como el código postal
+#         # y los pasas a la siguiente pantalla (filtros.html)
+#         codigo_postal = request.form['cp']
+#         return render_template('filtros.html', codigo_postal=codigo_postal)
+#     return render_template('index.html')
+
+# @app.route('/filtros', methods=['POST'])
+# def filtros():
+#     # Procesa los datos del formulario de filtros y pasa a la pantalla de recomendaciones
+#     # Aquí debes capturar los datos de los filtros
+#     tipo_estudios_preferidos = request.form['preferred-studios']
+#     # ... otros campos del formulario ...
+#     return render_template('recomendaciones.html', filtros=filtros)
+
+# @app.route('/recomendaciones', methods=['POST'])
+# def recomendaciones():
+#     # Extract form data
+#     latitude = request.form['latitude']
+#     longitude = request.form['longitude']
+#     tipo_preferido = request.form['preferred-studios']
+#     tipo_no_gustado = request.form['disliked-studios']
+#     es_fitpass_pro = request.form['fitpass-pro'] == 'yes'
+#     frecuencia_visitas = request.form['visit-frequency']
+
+#     # Llama a tu función del modelo aquí
+#     recomendaciones = obtener_recomendaciones_con_filtro(latitude, longitude, tipo_preferido, tipo_no_gustado, es_fitpass_pro, frecuencia_visitas)
+    
+#     # Renderiza la página de recomendaciones con los resultados del modelo
+#     return render_template('recomendaciones.html', recomendaciones=recomendaciones)
+
+
 # %% main
 if __name__ == '__main__':
     if os.environ.get('FLASK_ENV') != 'development':
