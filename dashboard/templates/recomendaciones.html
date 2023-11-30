@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ... -->
+    <title>Recomendaciones - Fitpass Studios</title>
+    <!-- Incluir Leaflet para el mapa -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+</head>
+<body>
+    <h1>Tus Recomendaciones</h1>
+    <div id="map" style="height: 400px;"></div>
+    <div id="recomendaciones-lista">
+        <!-- Iterar sobre las recomendaciones y mostrar detalles aquí -->
+        {% for estudio in recomendaciones %}
+            <div class="estudio">
+                <h2>{{ estudio.nombre }}</h2>
+                <p>Tipo: {{ estudio.tipo }}</p>
+                <p>Ubicación: {{ estudio.ubicacion }}</p>
+                <!-- Más detalles del estudio  -->
+            </div>
+        {% endfor %}
+    </div>
+    <script>
+        var map = L.map('map').setView([19.4326, -99.1332], 13); // Coordenadas iniciales
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        // Añadir marcadores para cada estudio
+        {% for estudio in recomendaciones %}
+            var marker = L.marker([{{ estudio.latitud }}, {{ estudio.longitud }}]).addTo(map);
+            marker.bindPopup("<b>{{ estudio.nombre }}</b><br>{{ estudio.tipo }}");
+        {% endfor %}
+    </script>
+</body>
+</html>
