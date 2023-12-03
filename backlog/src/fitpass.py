@@ -153,7 +153,8 @@ def distances_user_studios(gdf, user_info, use_ranking=True):
     gdf['distance_loss'] = distance_studio_loss(
         distance=normalize(gdf['distance'].copy()),
         sensitivity=user_info['distance_sensitivity']
-        )
+        ) 
+    gdf['distance_loss'] = gdf['distance_loss'] - (1 + gdf['distance_loss'].min() * user_info['max_allowed_classes_per_class']) # normalize to 0
 
     #### user preferences ####
     # activity preference
@@ -285,8 +286,8 @@ def create_problem(df, user_info, list_activities, dict_weights):
     dict_variables = create_variables(df, user_info, list_activities)
     # unpack variables (WIP: GET THIS VARIABLES)
     gym_dict = dict_variables['gym']
-    n_classes_dict = dict_variables['class']
     activities_dict = dict_variables['activity']
+    num_activities = len(activities_dict)
 
     #### create problem ####
     # init
@@ -295,14 +296,11 @@ def create_problem(df, user_info, list_activities, dict_weights):
     f_distance = plp.lpSum([gym.get_distance() for gym in gym_dict.values()])
     f_preference = plp.lpSum([gym.get_preference() for gym in gym_dict.values()])
     f_activity = plp.lpSum((activities_dict.values()))
-    f_n_classes = plp.lpSum(list(n_classes_dict.values()))
     # generate objective function
     prob += (
-        dict_weights['distance'] * f_distance
-        - dict_weights['preference'] * f_preference 
-        - dict_weights['activity'] * f_activity 
-        - dict_weights['class'] * f_n_classes,
-        "objective function"
+        (1/user_info['num_classes_per_month']) * dict_weights['distance'] * f_distance
+        - (1/user_info['num_classes_per_month']) * dict_weights['preference'] * f_preference 
+        - (1/num_activities) * dict_weights['activity'] * f_activity 
     )
 
     #### constraints ####
@@ -320,16 +318,6 @@ def create_problem(df, user_info, list_activities, dict_weights):
         prob += (
             v <= plp.lpSum([gym.get_variable() for gym in gyms_with_activity]),
             f"activity_{k}"
-        )
-
-    # auxiliar variable constraint for number of classes in the same gym
-    for k, v in n_classes_dict.items():
-        # get all the gyms with the activity
-        gym = gym_dict[k]
-        # add constraint
-        prob += (
-            v <= gym.get_variable(),
-            f"classes_at_gym{k}"
         )
 
     return {'problem': prob, 'variables': dict_variables}
@@ -353,7 +341,7 @@ def solve_problem(prob, dict_variables):
         print("The problem has no solution")
         solution = None
         activities_with_classes = None
-    return {'solution': solution, 'activities': activities_with_classes}
+    return {'solution': solution, 'activities': activities_with_classes, 'function_value': prob.objective.value()}
 
 def generate_solution(df, solutions):
     # get gym id's
@@ -401,7 +389,7 @@ def fitpass_optimization(user_info, dict_weights):
 
     # get solutions #
     df_solution = generate_solution(df_distances, dict_solution['solution'])
-    return df_solution
+    return df_solution, dict_solution['function_value']
 
 # =============================================================================
 # Main
@@ -416,8 +404,7 @@ if __name__ == "__main__":
     WEIGHTS = {
         'distance': 0.6,
         'preference': 0.3,
-        'activity': 0.075,
-        'class': 0.025
+        'activity': 0.1
     }
 
     payload = get_payloads()['roman']

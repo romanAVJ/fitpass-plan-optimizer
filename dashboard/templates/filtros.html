@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ... -->
+    <title>Filtros - Fitpass Studios</title>
+    <!-- ... -->
+</head>
+<body>
+    <div class="container mx-auto p-4">
+        <h1 class="text-2xl font-bold mb-4">Selecciona tus preferencias</h1>
+        <form action="/recomendaciones" method="POST">
+            <input type="hidden" name="latitude" value="{{ latitude }}">
+            <input type="hidden" name="longitude" value="{{ longitude }}">
+
+            <div>
+                <label for="preferred-studios" class="block text-sm font-medium text-gray-700">Tipo de estudios preferidos:</label>
+                <select id="preferred-studios" name="preferred-studios" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                    <!-- lista de tipos de estudios en tu base de datos -->
+                    <!-- Iterar sobre ellos para crear las opciones -->
+                    {% for tipo in tipos_estudios %}
+                        <option value="{{ tipo }}">{{ tipo }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label for="disliked-studios" class="block text-sm font-medium text-gray-700">Tipo de estudios que no me gustan:</label>
+                <select id="disliked-studios" name="disliked-studios" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                    <!-- Iterar sobre los tipos de estudios, similar a arriba -->
+                    {% for tipo in tipos_estudios %}
+                        <option value="{{ tipo }}">{{ tipo }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label for="fitpass-pro" class="block text-sm font-medium text-gray-700">Fitpass pro:</label>
+                <select id="fitpass-pro" name="fitpass-pro" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                    <option value="yes">Sí</option>
+                    <option value="no">No</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="visit-frequency" class="block text-sm font-medium text-gray-700">Número de veces al mes que quiero acudir (por estudio):</label>
+                <input type="number" id="visit-frequency" name="visit-frequency" min="1" max="4" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+            </div>
+
+            <div class="flex justify-end mt-4">
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">Ver Recomendaciones</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
