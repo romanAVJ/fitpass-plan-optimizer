@@ -159,7 +159,11 @@ def update_outputs(
         log_debugg("Conexión exitosa y leyendo datos")
         df_studios = pd.read_sql_query(query, engine)
         
-        log_debugg(f"Estudios recomendados: {df_studios}")
+        log_debugg(f"Estudios quereados: {df_studios}")
+        log_debugg(f"type df_studios: {type(df_studios)}")
+        log_debugg(f"shape df_studios: {df_studios.shape}")
+        log_debugg(f"{'='*100}")
+
         log_debugg(f"numero de clicks: {n_clicks}")
         if n_clicks > 0 and activity:
             # Hacer la solicitud a la API
@@ -191,21 +195,27 @@ def update_outputs(
                 "num_classes_per_month": 23
             }
             log_debugg(f"Solicitud: {sample_request}")
-            url = 'http://localhost:8080/predict'
-            response = requests.post(url, json=sample_request)
+            url = 'http://app:8080/predict'
+            try:
+                response = requests.post(url, json=sample_request)
+                response_json = response.json()
+            except Exception as e:
+                log_debugg(f"Error during POST request: {e}")
             log_debugg(f"Respuesta: {response}")
             response_json = response.json()
-            if isinstance(response_json, list):
-                df_recommendations = pd.DataFrame(response_json)
-            elif isinstance(response_json, dict):
-                df_recommendations = pd.DataFrame([response_json])
-            else:
-                raise ValueError("Respuesta JSON no reconocida")
+            log_debugg(f"Respuesta JSON: {response_json}")
+            df_recommendations = pd.DataFrame(response_json)
 
-            log_debugg(f"Estudios recomendados: {df_recommendations}")
+            log_debugg("Estudios recomendados:")
+            log_debugg(df_recommendations)
+            log_debugg(f"shape recomendaciones: {df_recommendations.shape}")
+            log_debugg(f"type df_studios: {type(df_recommendations)}")
             df_combined = df_studios.merge(df_recommendations, on='gym_id', how='inner')
 
             # Preparar los datos para el mapa y la tabla
+            log_debugg(df_combined.columns)
+            log_debugg(f"shape combined: {df_combined.shape}")
+            log_debugg(f"{'='*100}")
             df_combined['latitude'] = pd.to_numeric(df_combined['latitude'], errors='coerce')
             df_combined['longitude'] = pd.to_numeric(df_combined['longitude'], errors='coerce')
             df_combined = df_combined.dropna(subset=['latitude', 'longitude'])
@@ -213,13 +223,15 @@ def update_outputs(
         # Crear los marcadores para el mapa
         log_debugg("Creando marcadores para el mapa...")
         markers = [dl.TileLayer()]
-        for _, row in df_combined.iterrows():
-            marker = dl.Marker(position=[row['latitude'], row['longitude']], children=[dl.Tooltip(row['name'])])
+        for i, row in df_combined.iterrows():
+            log_debugg(f"row {i}")
+            marker = dl.Marker(position=[row['latitude'], row['longitude']], children=[dl.Tooltip(row['gym_name'])])
             markers.append(marker)
+            log_debugg(f"Marcador agregado: {marker}")
 
         # Crear la gráfica (ajustar según los datos disponibles)
         log_debugg("Creando gráfica...")
-        fig_graph = px.bar(df_combined, x='name', y='some_metric', title='Métrica por Estudio')
+        fig_graph = px.bar(df_combined, x='gym_name', y='gym_times', title='Numero de veces recomendado')
 
         # Crear la tabla
         log_debugg("Creando tabla...")
