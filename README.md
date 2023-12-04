@@ -23,6 +23,9 @@ docker-compose up -d --build
 
 
 # 2. Test endpoints
+## Dashboard
+You can access to the dashboard at `http://localhost:8050`
+
 ## API
 You can access the API at `http://localhost:8000` 
 
@@ -50,8 +53,7 @@ curl -X POST -H "Content-Type: application/json" -d '{
 }' http://localhost:8080/predict
 ```
 
-## Dashboard
-You can access to the dashboard at `http://localhost:8050`
+
 
 
 3. Stop & remove the container
