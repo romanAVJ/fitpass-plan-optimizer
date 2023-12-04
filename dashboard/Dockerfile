@@ -14,7 +14,7 @@ WORKDIR /
 
 # Copy requirements.txt file and install Python dependencies
 COPY requirements.txt /dashboard/requirements.txt
-RUN pip install --no-cache-dir -r /dashoboard/requirements.txt
+RUN pip install --no-cache-dir -r /dashboard/requirements.txt
 
 # Copy the files from dashboard directory to the root directory
 COPY . /dashboard
@@ -23,5 +23,5 @@ COPY . /dashboard
 WORKDIR /dashboard
 
 # run the dash dashboard
-ENV DASH_ENV prod
+ENV DASH_ENV development
 CMD ["python", "dashboard.py"]

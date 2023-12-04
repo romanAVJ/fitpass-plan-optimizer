@@ -6,7 +6,10 @@ from dash.dependencies import Input, Output, State
 import plotly.express as px
 import pandas as pd
 import requests
-import sqlalchemy as sa
+from sqlalchemy import create_engine
+import psycopg2
+import time
+
 import math
 import os
 import logging
@@ -16,19 +19,35 @@ def log_debugg(text):
         logging.debug(text)
 
 logging.basicConfig(level=logging.DEBUG)
-# Configuración de la conexion a la base de datos
-db_host=os.environ.get('POSTGRES_HOST', 'localhost'),
-db_user=os.environ.get('POSTGRES_USER', 'postgres'),
-db_password=os.environ.get('POSTGRES_PASSWORD', ''),
-db_database=os.environ.get('POSTGRES_DB', 'fitpass')
-database_url = f"postgresql://{db_user}:{db_password}@{db_host}/{db_database}"
-engine = sa.create_engine(database_url)
+
+def get_db_conn():
+    max_retries = 3
+    retries = 0
+
+    while retries < max_retries:
+        try:
+            log_debugg(f"Trying to connect to the PostgreSQL database... ({retries}/{max_retries})")
+            host = os.environ.get('POSTGRES_HOST', 'localhost')
+            user = os.environ.get('POSTGRES_USER', 'postgres')
+            password = os.environ.get('POSTGRES_PASSWORD', '')
+            database = os.environ.get('POSTGRES_DB', 'fitpass')
+            conn = create_engine(f'postgresql://{user}:{password}@{host}/{database}')
+            log_debugg("Connected to the PostgreSQL database.")
+            return conn
+        except psycopg2.OperationalError as e:
+            log_debugg(f"Error: {e}")
+            log_debugg(f"Waiting 10 seconds for PostgreSQL to be ready... ({retries}/{max_retries})")
+            retries += 1
+            time.sleep(10)
+
+    log_debugg("Max retries reached. Unable to connect to the PostgreSQL database.")
+    return None
 
 # Inicializacion de la aplicacion Dash
-app = dash.Dash(__name__)
+dashboard = dash.Dash(__name__)
 
 # Layout de la Aplicacion
-app.layout = html.Div([
+dashboard.layout = html.Div([
     html.H1("Dashboard de Estudios de Fitness"),
     dcc.Input(id='input-lat', type='text', placeholder='Latitud'),
     dcc.Input(id='input-lon', type='text', placeholder='Longitud'),
@@ -48,9 +67,9 @@ app.layout = html.Div([
      dcc.Dropdown(
         id='distance-dropdown',
         options=[
-            {'label': 'Cerca', 'value': 'cerca'},
-            {'label': 'Medio', 'value': 'medio'},
-            {'label': 'Lejano', 'value': 'lejano'}
+            {'label': 'Cerca', 'value': 'low'},
+            {'label': 'Medio', 'value': 'medium'},
+            {'label': 'Lejano', 'value': 'high'}
         ],
         placeholder="Selecciona la distancia"
     ),
@@ -98,7 +117,7 @@ def combine_dataframes(df1, df2):
     combined_df = combined_df.drop_duplicates(subset=['gym_id'])
     return combined_df
 
-@app.callback(
+@dashboard.callback(
     [
         Output('map-view', 'children'),  # Para los marcadores del mapa
         Output('fig_graph', 'figure'),  # Para la grafica
@@ -124,16 +143,23 @@ def update_outputs(n_clicks, lat, lon, activities, distance_option, dislikes, fr
     if lat is not None and lon is not None:
         # Obtener estudios recomendados de la base de datos
         query = generate_sql_query(lat, lon, activities, dislikes, frequency, distance_option)
+        engine = get_db_conn()
         df_studios = pd.read_sql_query(query, engine)
         
         if n_clicks > 0 and activities:
             # Hacer la solicitud a la API
             sample_request = {
+                "name": "roman",
                 "location": {"latitude": lat, "longitude": lon}, 
-                "love_activities": activities, 
-                "hate_activities": dislikes, 
+                "distance_sensitivity": distance_option,
+                "preferences":{
+                    "love_activities": activities, "hate_activities": dislikes
+                },
+                "is_pro": 1,
+                "max_allowed_classes_per_class": 4,
                 "num_classes_per_month": frequency
             }
+
             response = requests.post('http://localhost:8080/predict', json=sample_request)
             response_json = response.json()
             if isinstance(response_json, list):
@@ -186,7 +212,7 @@ def update_outputs(n_clicks, lat, lon, activities, distance_option, dislikes, fr
 if __name__ == '__main__':
     if os.environ.get('DASH_ENV') != 'development':
         log_debugg("Running in production mode...")
-        app.run(host='0.0.0.0', port=8050) # production
+        dashboard.run(host='0.0.0.0', port=8050) # production
     else:
         log_debugg("Running in development mode...")
-        app.run(host='0.0.0.0', debug=True, port=8050) # development / debugging
+        dashboard.run(host='0.0.0.0', debug=True, port=8050) # development / debugging
