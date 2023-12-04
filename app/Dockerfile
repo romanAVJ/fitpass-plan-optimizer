@@ -37,7 +37,7 @@ WORKDIR /app
 
 #### RUN FLASK PYTHON SERVER ####
 ENV FLASK_APP app.py
-ENV FLASK_ENV development
+ENV FLASK_ENV prod
 
 # Expose the port 8080
 EXPOSE 8080

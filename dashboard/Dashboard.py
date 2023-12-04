@@ -8,20 +8,26 @@ import pandas as pd
 import requests
 import sqlalchemy as sa
 import math
+import os
+import logging
+# %% debugging
+def log_debugg(text):
+    if os.environ.get('DASH_ENV') == 'development':
+        logging.debug(text)
 
-# Configuración de la conexión a la base de datos
-db_name = 'fitpass'
-db_user = 'postgres'
-db_host = 'localhost'
-db_password = 'skalas-puts-me-an-aplus-in-this-class'
-database_url = f"postgresql://{db_user}:{db_password}@{db_host}/{db_name}"
+logging.basicConfig(level=logging.DEBUG)
+# Configuración de la conexion a la base de datos
+db_host=os.environ.get('POSTGRES_HOST', 'localhost'),
+db_user=os.environ.get('POSTGRES_USER', 'postgres'),
+db_password=os.environ.get('POSTGRES_PASSWORD', ''),
+db_database=os.environ.get('POSTGRES_DB', 'fitpass')
+database_url = f"postgresql://{db_user}:{db_password}@{db_host}/{db_database}"
 engine = sa.create_engine(database_url)
 
-
-# Inicialización de la aplicación Dash
+# Inicializacion de la aplicacion Dash
 app = dash.Dash(__name__)
 
-# Layout de la Aplicación
+# Layout de la Aplicacion
 app.layout = html.Div([
     html.H1("Dashboard de Estudios de Fitness"),
     dcc.Input(id='input-lat', type='text', placeholder='Latitud'),
@@ -56,7 +62,7 @@ app.layout = html.Div([
     html.Div(id='table-view')  # Div para mostrar la tabla de resultados
 ])
 
-# Función para calcular la distancia utilizando la fórmula de Haversine
+# Funcion para calcular la distancia utilizando la formula de Haversine
 def calculate_distance(lat1, lon1, lat2, lon2):
     R = 6371.0  # Radio de la Tierra en kilómetros
     lat1_rad = math.radians(lat1)
@@ -70,7 +76,7 @@ def calculate_distance(lat1, lon1, lat2, lon2):
     distance = R * c
     return distance
 
-# Función para generar la consulta SQL con las nuevas entradas
+# Funcion para generar la consulta SQL con las nuevas entradas
 def generate_sql_query(lat, lon, love_activities, dislike_activities, frequency, distance_option):
     query = "SELECT * FROM cdmx_studios WHERE TRUE"
 
@@ -86,7 +92,7 @@ def generate_sql_query(lat, lon, love_activities, dislike_activities, frequency,
 
     return query
 
-# Función para combinar DataFrames
+# Funcion para combinar DataFrames
 def combine_dataframes(df1, df2):
     combined_df = pd.concat([df1, df2], ignore_index=True)
     combined_df = combined_df.drop_duplicates(subset=['gym_id'])
@@ -95,7 +101,7 @@ def combine_dataframes(df1, df2):
 @app.callback(
     [
         Output('map-view', 'children'),  # Para los marcadores del mapa
-        Output('fig_graph', 'figure'),  # Para la gráfica
+        Output('fig_graph', 'figure'),  # Para la grafica
         Output('table-view', 'children')  # Para la tabla
     ],
     [
@@ -155,7 +161,7 @@ def update_outputs(n_clicks, lat, lon, activities, distance_option, dislikes, fr
                         markers.append(marker)
             # Modificar los valores de pro_status
             df_combined['pro_status'] = df_combined['pro_status'].apply(lambda x: 1 if x == 1 else -1)
-            # Crear la gráfica de barras
+            # Crear la grafica de barras
             if not df_combined.empty:
                 fig_graph = px.bar(df_combined, x='gym_name', y='pro_status',
                            title='Tipo de Estudio y Fitpass Pro Status',
@@ -173,9 +179,14 @@ def update_outputs(n_clicks, lat, lon, activities, distance_option, dislikes, fr
         # Asegúrate de retornar marcadores para el mapa
         return markers, fig_graph, table
 
-    # Retornar elementos vacíos si no hay datos válidos
+    # Retornar elementos vacios si no hay datos validos
     return [dl.TileLayer()], html.Div(), html.Div()
 
-# Ejecución del servidor
+# Ejecucion del servidor
 if __name__ == '__main__':
-    app.run_server(debug=True, port=8050)
+    if os.environ.get('DASH_ENV') != 'development':
+        log_debugg("Running in production mode...")
+        app.run(host='0.0.0.0', port=8050) # production
+    else:
+        log_debugg("Running in development mode...")
+        app.run(host='0.0.0.0', debug=True, port=8050) # development / debugging

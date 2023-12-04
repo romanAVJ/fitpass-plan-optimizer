@@ -1,5 +1,5 @@
 # fitpass-plan-optimizer
-An AI model (mixed optimization) to generate the best workout plan in fitpass subject to the user preferences and restrictions 
+An AI model (mixed optimization) to generate the best workout plan of classes in fitpass subject to the user preferences and restrictions 
 
 # Run interactivly the application
 1. Build Docker image and put it up
@@ -11,23 +11,7 @@ Navigate to the project directory and run the following command:
 docker-compose up -d --build
 ```
 
-2. Run interactivly the application
-
-Execute any program you want. For example, to run the init_db program, run the following command:
-
-```bash
-docker-compose run --rm -p 8080:8080 app bash
-```
-
-3. Execute programs
-
-Execute any program of the app container. For example, to run the init_db program, run the following command:
-```bash
-# Run the init_db program
-python init_db.py
-```
-
-4. Stop & remove the container
+2. Stop & remove the container
 ```bash
 # Remove the containers
 docker-compose down

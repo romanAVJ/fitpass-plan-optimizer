@@ -12,28 +12,16 @@ ENV POSTGRES_PASSWORD skalas-puts-me-an-aplus-in-this-class
 # Switch to the root directory
 WORKDIR /
 
-# install GDAL dependencies for fiona
-RUN apt-get update \
-    && apt-get install -y libgdal-dev \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
 # Copy requirements.txt file and install Python dependencies
 COPY requirements.txt /dashboard/requirements.txt
 RUN pip install --no-cache-dir -r /dashoboard/requirements.txt
 
-# Copy the files from app directory to the root directory
-COPY . /app
+# Copy the files from dashboard directory to the root directory
+COPY . /dashboard
 
-# # Set the working directory
-WORKDIR /app
+# Set the working directory
+WORKDIR /dashboard
 
-#### RUN FLASK PYTHON SERVER ####
-ENV FLASK_APP app.py
-ENV FLASK_ENV development
-
-# Expose the port Ponerle (DASH)
-EXPOSE 8050
-
-# Run the flask server. (DASH)
-CMD ["flask", "run", "--host=0.0.0.0", "--port=8050"]
+# run the dash dashboard
+ENV DASH_ENV prod
+CMD ["python", "dashboard.py"]
