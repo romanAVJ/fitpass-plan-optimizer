@@ -23,5 +23,5 @@ COPY . /dashboard
 WORKDIR /dashboard
 
 # run the dash dashboard
-ENV DASH_ENV development
+ENV DASH_ENV prod
 CMD ["python", "dashboard.py"]

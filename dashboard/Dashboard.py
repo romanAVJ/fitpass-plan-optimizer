@@ -165,34 +165,20 @@ def update_outputs(
         log_debugg(f"{'='*100}")
 
         log_debugg(f"numero de clicks: {n_clicks}")
+        log_debugg(f"is_pro: {is_pro}")
         if n_clicks > 0 and activity:
             # Hacer la solicitud a la API
-            # sample_request = {
-            #     "name": name if name else "Anónimo",
-            #     "location": {"latitude": lat, "longitude": lon}, 
-            #     "distance_sensitivity": distance_option,
-            #     "preferences": {
-            #         "love_activities": activity, 
-            #         "hate_activities": dislikes
-            #     },
-            #     "is_pro": is_pro if is_pro else 0,
-            #     "max_allowed_classes_per_class": max_classes if max_classes else 4,
-            #     "num_classes_per_month": frequency if frequency else 20
-            # }
-            sample_request ={
-                "name": "roman",
-                "location": {
-                    "latitude": 19.388900864307445,
-                    "longitude": -99.18265186842596
-                },
-                "distance_sensitivity": "medium",
+            sample_request = {
+                "name": name,
+                "location": {"latitude": lat, "longitude": lon}, 
+                "distance_sensitivity": distance_option,
                 "preferences": {
-                    "love_activities": ["barre", "yoga", "cycling", "pilates", "gym"],
-                    "hate_activities": ["crossfit", "functional"]
+                    "love_activities": activity, 
+                    "hate_activities": dislikes
                 },
-                "is_pro": 1,
-                "max_allowed_classes_per_class": 4,
-                "num_classes_per_month": 23
+                "is_pro": 1 if is_pro[0] == 'is_pro' else 0,
+                "max_allowed_classes_per_class": max_classes,
+                "num_classes_per_month": frequency
             }
             log_debugg(f"Solicitud: {sample_request}")
             url = 'http://app:8080/predict'
