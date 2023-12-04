@@ -6,8 +6,6 @@ services:
     ports:
       - 5432:5432
     restart: always
-    # volumes:
-    #   - ./postgres-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -28,6 +26,11 @@ services:
         condition: service_healthy
       init_db:
         condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/info"]
+      interval: 7s
+      timeout: 5s
+      retries: 5
     ports:
       - 8080:8080
     volumes:
@@ -38,7 +41,11 @@ services:
     depends_on:
       app:
         condition: service_healthy
+      init_db:
+        condition: service_completed_successfully
+      db:
+        condition: service_healthy
     ports:
-      - 3000:3000
+      - 8050:8050
     volumes:
       - ./dashboard:/dashboard

@@ -1,5 +1,13 @@
-# fitpass-plan-optimizer
-An AI model (mixed optimization) to generate the best workout plan in fitpass subject to the user preferences and restrictions 
+# Fitpass-plan-optimizer
+## Participants
+Román Alberto Vélez Jiménez: 165462
+
+David Escudero Garcia: 208952
+
+Rodrigo Zavaleta Sosa: 208960
+
+## Overview
+An AI model (mixed optimization) to generate the best workout plan of classes in fitpass subject to the user preferences and restrictions. 
 
 # Run interactivly the application
 1. Build Docker image and put it up
@@ -11,45 +19,12 @@ Navigate to the project directory and run the following command:
 docker-compose up -d --build
 ```
 
-2. Run interactivly the application
+**Note:** Please wait until the container is up and running. The ETA is about 5 minutes.
 
-Execute any program you want. For example, to run the init_db program, run the following command:
 
-```bash
-docker-compose run --rm -p 8080:8080 app bash
-```
-
-3. Execute programs
-
-Execute any program of the app container. For example, to run the init_db program, run the following command:
-```bash
-# Run the init_db program
-python init_db.py
-```
-
-4. Stop & remove the container
-```bash
-# Remove the containers
-docker-compose down
-
-# Remove all the images
-docker rmi $(docker images -a -q)
-
-# Remove all the volumes
-docker volume rm $(docker volume ls -q)
-```
-
-# Run the application in production (WIP)
-1. Compose the application
-
-Navigate to the project directory and run the following command:
-```bash
-docker-compose up --build
-```
-
-Now you can access the application at http://localhost:8000
-
-2. Test endpoints
+# 2. Test endpoints
+## API
+You can access the API at `http://localhost:8000` 
 
 - `info` endpoint
 ```bash
@@ -73,4 +48,20 @@ curl -X POST -H "Content-Type: application/json" -d '{
     "max_allowed_classes_per_class": 4,
     "num_classes_per_month": 23
 }' http://localhost:8080/predict
+```
+
+## Dashboard
+You can access to the dashboard at `http://localhost:8050`
+
+
+3. Stop & remove the container
+```bash
+# Remove the containers
+docker-compose down
+
+# Remove all the images
+docker rmi $(docker images -a -q)
+
+# Remove all the volumes
+docker volume rm $(docker volume ls -q)
 ```
