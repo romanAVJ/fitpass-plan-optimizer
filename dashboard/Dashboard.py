@@ -61,65 +61,11 @@ def calculate_distance(lat1, lon1, lat2, lon2):
 def generate_sql_query(lat, lon, love_activities, distance_option):
     query = "SELECT * FROM cdmx_studios WHERE TRUE"
 
-    # # Lógica para manejar la distancia
-    # if lat is not None and lon is not None:
-    #     # Define la lógica para cada opción de distancia
-    #     if distance_option == 'cerca':
-    #         distance_value = 5  # Ejemplo: 5 km para "cerca"
-    #     elif distance_option == 'medio':
-    #         distance_value = 15  # Ejemplo: 15 km para "medio"
-    #     elif distance_option == 'lejano':
-    #         distance_value = 30  # Ejemplo: 30 km para "lejano"
-    #     else:
-    #         distance_value = 10  # Valor por defecto o manejo de casos no definidos
-
-    #     query += f" AND calculate_distance(latitude, longitude, {lat}, {lon}) <= {distance_value}"
-    
-    # Lógica para filtrar por actividades favoritas
     if love_activities:
         love_conditions = " OR ".join([f"{activity} = 1" for activity in love_activities])
         query += f" AND ({love_conditions})"
 
     return query
-
-# # Función para generar la consulta SQL
-# def generate_sql_query(lat, lon, love_activities):
-#     # Inicia la consulta SQL base
-#     query = "SELECT * FROM cdmx_studios WHERE TRUE"
-
-#     # Añade condiciones basadas en la ubicación
-#     # Nota: Debes reemplazar 'calculate_distance' con tu función real de cálculo de distancia
-#     if lat is not None and lon is not None:
-#         # Aquí puedes definir la lógica para cada opción de distancia
-#         if distance_option == 'cerca':
-#             distance_value = 5  # Ejemplo: 5 km para "cerca"
-#         elif distance_option == 'medio':
-#             distance_value = 15  # Ejemplo: 15 km para "medio"
-#         elif distance_option == 'lejano':
-#             distance_value = 30  # Ejemplo: 30 km para "lejano"
-#         else:
-#             distance_value = 10  # Valor por defecto o manejo de casos no definidos
-
-#         query += f" AND calculate_distance(latitude, longitude, {lat}, {lon}) <= {distance_value}"
-#     # Filtra por actividades favoritas
-#     if love_activities:
-#         love_conditions = " OR ".join([f"{activity} = 1" for activity in love_activities])
-#         query += f" AND ({love_conditions})"
-
-        
-
-#     # # Excluye actividades que no le gustan
-#     # if hate_activities:
-#     #     hate_conditions = " AND ".join([f"{activity} = 0" for activity in hate_activities])
-#     #     query += f" AND ({hate_conditions})"
-
-#     # # Considera si el usuario es profesional
-#     # if is_pro:
-#     #     query += " AND pro_status = 1"
-
-#     # Agrega cualquier otra lógica relacionada con max_classes y num_classes_month si es necesario
-
-#     return query
 
 # Función para combinar DataFrames
 def combine_dataframes(df1, df2):
@@ -135,44 +81,48 @@ def combine_dataframes(df1, df2):
     [State('input-lat', 'value'), State('input-lon', 'value'), State('activity-dropdown', 'value'), State('distance-dropdown', 'value')]
 )
 def update_map(n_clicks, lat, lon, activities, distance_option):
-    if lat and lon:
+    try:
+        lat = float(lat) if lat else None
+        lon = float(lon) if lon else None
+    except ValueError:
+        lat, lon = None, None
+    print(f"Lat: {lat}, Lon: {lon}, Activities: {activities}, Distance: {distance_option}")
+
+    if lat is not None and lon is not None:
         query = generate_sql_query(lat, lon, activities, distance_option)
         df_studios = pd.read_sql_query(query, engine)
             
         if n_clicks > 0 and activities:
             sample_request = {"location": {"latitude": lat, "longitude": lon}, "love_activities": activities}
             response = requests.post('http://localhost:8080/predict', json=sample_request)
-            # Verifica si la respuesta JSON es una lista o un diccionario
             response_json = response.json()
             if isinstance(response_json, list):
                 df_recommendations = pd.DataFrame(response_json)
             elif isinstance(response_json, dict):
-                # Crear un DataFrame a partir de un diccionario con un índice
                 df_recommendations = pd.DataFrame([response_json])
             else:
                 raise ValueError("Respuesta JSON no reconocida")
 
             df_combined = combine_dataframes(df_studios, df_recommendations)
 
-           # Asegúrate de que las columnas 'latitude' y 'longitude' sean numéricas
-        if 'latitude' in df_combined.columns and 'longitude' in df_combined.columns:
+            # Asegurarse de que las columnas 'latitude' y 'longitude' sean numéricas
             df_combined['latitude'] = pd.to_numeric(df_combined['latitude'], errors='coerce')
             df_combined['longitude'] = pd.to_numeric(df_combined['longitude'], errors='coerce')
 
-        # Crea el mapa
-        if df_combined.notnull().any().any():  # Verifica si hay al menos un valor no nulo
-            fig = px.scatter_mapbox(
-                df_combined, lat='latitude', lon='longitude', hover_name='gym_name',
-                color='gym_name', zoom=10, height=300
-            )
-            fig.update_layout(mapbox_style="open-street-map")
-            return fig
-        
-    # Crear un DataFrame vacío con columnas lat y lon
-    empty_df = pd.DataFrame({'lat': [], 'lon': []})
+            # Filtrar filas con datos faltantes o incorrectos en 'latitude' y 'longitude'
+            df_combined = df_combined.dropna(subset=['latitude', 'longitude'])
+            print(df_combined.head())  # Imprimir las primeras filas para depuración
 
-    # Retornar un gráfico de mapa vacío con el DataFrame vacío
-    return px.scatter_mapbox(empty_df, lat='lat', lon='lon')
+            # Crear el mapa si hay datos válidos
+            if not df_combined.empty:
+                fig = px.scatter_mapbox(
+                    df_combined, lat='latitude', lon='longitude', hover_name='gym_name',
+                    color='gym_name', zoom=10, height=300
+                )
+                fig.update_layout(mapbox_style="open-street-map")
+                return fig
+    # Retornar un gráfico de mapa vacío si no hay datos válidos de lat y lon
+    return px.scatter_mapbox(pd.DataFrame({'lat': [], 'lon': []}), lat='lat', lon='lon')
 
 # Ejecución del servidor
 if __name__ == '__main__':
