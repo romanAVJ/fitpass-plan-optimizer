@@ -67,3 +67,53 @@ docker rmi $(docker images -a -q)
 # Remove all the volumes
 docker volume rm $(docker volume ls -q)
 ```
+
+
+
+
+
+
+Nombre del proyecto: Dashboard de Fitpass
+
+Descripción:
+Este proyecto es un dashboard de Fitpass que permite a los usuarios buscar estudios de Fitpass en una ciudad y colonia específica. El dashboard consta de un gráfico de barras que muestra el número de estudios por tipo, una lista de estudios que cumplen con los criterios de búsqueda, y un mapa que muestra la ubicación de los estudios.
+
+Requisitos:
+- Python 3.x
+- Dash
+- Dash Leaflet
+- Plotly Express
+- Pandas
+
+Instalación:
+
+Clone el repositorio a su máquina local.
+Abra una terminal y navegue a la carpeta que contiene el código.
+Instale las dependencias requeridas:
+pip install -r requirements.txt
+Ejecución:
+Ejecute el siguiente comando para iniciar la aplicación Dash:
+python app.py
+La aplicación se iniciará en http://localhost:8050.
+
+
+Uso:
+
+Para usar el dashboard, seleccione una ciudad y colonia en los menús desplegables. Luego, haga clic en el botón "Buscar". El gráfico de barras se actualizará para mostrar el número de estudios por tipo en la ciudad y colonia seleccionada. La lista de estudios se actualizará para mostrar una lista de todos los estudios que cumplen con los criterios de búsqueda. El mapa se actualizará para mostrar la ubicación de los estudios.
+
+
+Lógica de actualización de la lista y el mapa:
+La lógica para actualizar la lista y el mapa se encuentra en la función actualizar_lista_y_mapa(). Esta función toma tres argumentos:
+n_clicks: El número de clics en el botón "Buscar".
+ciudad: El valor seleccionado en el menú desplegable "Ciudad".
+colonia: El valor seleccionado en el menú desplegable "Colonia".
+La función primero verifica si n_clicks es None. Si es así, significa que el usuario aún no ha hecho clic en el botón "Buscar". En este caso, la función devuelve una lista con un mensaje que indica al usuario que debe seleccionar una ciudad y colonia.
+Si n_clicks no es None, la función procede a actualizar la lista y el mapa. Para actualizar la lista, la función filtra los datos de data_dummy para encontrar los estudios que se encuentran en la ciudad y colonia seleccionada.
+Para actualizar el mapa, la función crea un objeto dl.MarkerCluster() para cada estudio que se encuentra en la ciudad y colonia seleccionada. Luego, la función agrega el objeto dl.MarkerCluster() al mapa.
+
+
+
+Próximos pasos:
+Agregar filtros adicionales a la búsqueda, como el tipo de estudio y la disponibilidad de clases.
+Agregar funcionalidad para guardar los resultados de la búsqueda.
+Agregar funcionalidad para compartir los resultados de la búsqueda.
